@@ -1,45 +1,71 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
+import "./BracketPage.css"; // Import new styles
 
-const BracketPage = ({ qualifiedDrivers }) => {
+const BracketPage = ({ drivers }) => {
   const [bracket, setBracket] = useState([]);
 
   useEffect(() => {
-    if (qualifiedDrivers.length > 0) {
-      setBracket(qualifiedDrivers.slice(0, 32)); // Take the top 32
+    const savedDrivers = JSON.parse(localStorage.getItem("qualifyingDrivers"));
+    if (savedDrivers && savedDrivers.length >= 32) {
+      generateBracket(savedDrivers);
     }
-  }, [qualifiedDrivers]);
+  }, []);
 
-  // Swap positions in the bracket
-  const swapDrivers = (indexA, indexB) => {
-    const newBracket = [...bracket];
-    [newBracket[indexA], newBracket[indexB]] = [newBracket[indexB], newBracket[indexA]];
+  const generateBracket = (driversToUse) => {
+    const top32 = driversToUse.slice(0, 32);
+    const newBracket = [];
+
+    for (let i = 0; i < 16; i++) {
+      newBracket.push({
+        top: top32[i],
+        bottom: top32[31 - i],
+      });
+    }
+
     setBracket(newBracket);
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Bracket</h2>
-      <div className="grid grid-cols-2 gap-4">
-        {bracket.map((driver, index) => (
-          <div key={index} className="p-2 border rounded flex justify-between">
-            <span>{driver.name}</span>
-            <button 
-              onClick={() => swapDrivers(index, index - 1)}
-              disabled={index === 0}
-              className="bg-gray-300 px-2 py-1 rounded"
-            >
-              ↑
-            </button>
-            <button 
-              onClick={() => swapDrivers(index, index + 1)}
-              disabled={index === bracket.length - 1}
-              className="bg-gray-300 px-2 py-1 rounded"
-            >
-              ↓
-            </button>
+    <div className="bracket-container">
+      <h2 className="bracket-title">Drift Battle Bracket</h2>
+
+      <button className="refresh-button" onClick={() => generateBracket(JSON.parse(localStorage.getItem("qualifyingDrivers")))}>
+        Refresh Bracket
+      </button>
+
+      <div className="bracket">
+        {/* Left Side */}
+        <div className="bracket-side left">
+          {bracket.slice(0, 8).map((pair, index) => (
+            <div key={index} className="match">
+              <div className="team">{pair.bottom?.name || "TBD"}</div>
+              <div className="connector"></div>
+              <div className="team">{pair.top?.name || "TBD"}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Center Section for Finals */}
+        <div className="bracket-center">
+          <div className="finals">
+            <div className="team empty"></div>
+            <div className="connector"></div>
+            <div className="team empty"></div>
           </div>
-        ))}
+        </div>
+
+        {/* Right Side */}
+        <div className="bracket-side right">
+          {bracket.slice(8, 16).map((pair, index) => (
+            <div key={index} className="match">
+              <div className="team">{pair.top?.name || "TBD"}</div>
+              <div className="connector"></div>
+              <div className="team">{pair.bottom?.name || "TBD"}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
